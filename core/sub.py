@@ -1,4 +1,3 @@
-import os
 import time
 from typing import List
 from pysubs2 import SSAFile
@@ -7,29 +6,34 @@ from pysubs2 import SSAFile
 class Subtitle:
     def __init__(
             self,
-            project='untitled',
-            language=None,
+            project: str = 'untitled',
+            language: List[str] = None,
             **kwargs,
     ):
         pro_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
         self.project = pro_time + '_' + project
         self.language = language
+        self._data = None
+        self._files = None
 
     @property
     def data(self) -> List[SSAFile]:
-        return self.data
+        return self._data
 
     @data.setter
     def data(self, data):
-        self.data: List[SSAFile] = data
+        self._data: List[SSAFile] = data
 
     @property
     def files(self) -> List[str]:
-        return self.files
+        return self._files
 
     @files.setter
     def files(self, files):
-        self.files: List[str] = files
+        self._files: List[str] = files
+
+    def __str__(self):
+        return self.project
 
 
 if __name__ == '__main__':
