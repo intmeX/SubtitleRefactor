@@ -1,7 +1,9 @@
 from core.sub import Subtitle
 from core.source import SubSource
 from core.sink import SubSink
-from core.processor import Processor, Compose, register_processor, PROCESSOR
+from core.processor import register_processor, PROCESSOR, Compose
+from core.processor import Processor, JpFuriganaProcessor, TextCleaningProcessor
+from core.jp_analysis_processor import JpMarkProcessor
 
 
 __all__ = [
@@ -12,6 +14,9 @@ __all__ = [
     'Compose',
     'register_processor',
     'get_processor',
+    'JpFuriganaProcessor',
+    'TextCleaningProcessor',
+    'JpMarkProcessor',
 ]
 
 

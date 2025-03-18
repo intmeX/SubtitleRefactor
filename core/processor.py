@@ -1,6 +1,5 @@
 import pysubs2
 import time
-import json
 import requests
 import subprocess
 from typing import List
@@ -26,6 +25,7 @@ class Processor:
         self.coordinate = coordinate
 
     def __call__(self, subtitles: Subtitle) -> Subtitle:
+        print('{} starting...'.format(self.__class__.__name__))
         return self.process(subtitles)
 
     def process(self, subtitles: Subtitle) -> Subtitle:
@@ -59,7 +59,7 @@ class JpFuriganaProcessor(Processor):
             res = requests.get(cls.furigana_url + 'exit')
             print('Closing furigana server:', res.text)
         except Exception as e:
-            print('Closing furigana server:', e)
+            # print('Closing furigana server:', e)
             pass
         cls.furigana_running = False
 
@@ -102,26 +102,46 @@ class JpFuriganaProcessor(Processor):
 
     def process(self, subtitles: Subtitle) -> Subtitle:
         for i in tqdm(range(len(subtitles.data)), desc='Subtitle files', position=0):
-            multiline_sub = subtitles.data[i]
-            for sub in tqdm(multiline_sub, desc="Sentences", leave=False, position=0):
+            multisub = subtitles.data[i]
+            for sub in tqdm(multisub, desc="Sentences", leave=False, position=0):
                 try:
-                    furigana = JpFuriganaProcessor.get_furigana(sub.text, 'furigana', 'hiragana')
-                    # furigana = furigana.decode(encoding='utf-8')
-                    sub.text = furigana
+                    furigana = JpFuriganaProcessor.get_furigana(sub.plaintext, 'furigana', 'hiragana')
+                    sub.plaintext = furigana
                 except Exception as e:
                     print('Error in furigana for file: {}  line: {}  sentence: {}'.format(
                         subtitles.files[i],
                         i,
-                        sub.text,
+                        sub.plaintext,
                     ))
                     raise e
-            print('Completed {} sentences\' furigana for {}'.format(len(multiline_sub), subtitles.files[i]))
+            # print('Completed {} sentences\' furigana for {}'.format(len(multiline_sub), subtitles.files[i]))
         return subtitles
 
     def __del__(self):
         JpFuriganaProcessor.process_count -= 1
         if not JpFuriganaProcessor.process_count:
             JpFuriganaProcessor.close_furigana()
+
+
+@register_processor
+class TextCleaningProcessor(Processor):
+    def __init__(
+            self,
+            strip_charset: str,
+            replace_charset: List,
+            **kwargs
+    ):
+        self.strip_charset = strip_charset
+        self.replace_charset = replace_charset
+        super(TextCleaningProcessor, self).__init__(**kwargs)
+
+    def process(self, subtitles: Subtitle) -> Subtitle:
+        for multisub in tqdm(subtitles.data, desc='Subtitle files', position=0):
+            for sub in tqdm(multisub, desc="Sentences", leave=False, position=0):
+                sub.plaintext = sub.plaintext.strip(self.strip_charset)
+                for src_str, des_str in self.replace_charset:
+                    sub.plaintext = sub.plaintext.replace(src_str, des_str)
+        return subtitles
 
 
 class Compose:

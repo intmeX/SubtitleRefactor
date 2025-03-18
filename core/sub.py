@@ -15,6 +15,7 @@ class Subtitle:
         self.language = language
         self._data = None
         self._files = None
+        self._mark_plaintext = None
 
     @property
     def data(self) -> List[SSAFile]:
@@ -34,6 +35,14 @@ class Subtitle:
 
     def __str__(self):
         return self.project
+
+    @property
+    def mark_plaintext(self) -> List[List[dict]]:
+        return self._mark_plaintext
+
+    @mark_plaintext.setter
+    def mark_plaintext(self, mark):
+        self._mark_plaintext: List[List[List[dict]]] = mark
 
 
 if __name__ == '__main__':
