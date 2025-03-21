@@ -15,7 +15,7 @@ config = {
             {
                 'processor': 'TextCleaningProcessor',
                 'strip_charset': '＜＞ \n',
-                'replace_charset': [['\n', '']],
+                'replace_charset': [['\n', ''], ['　', ' ']],
             },
             {
                 'processor': 'JpMarkProcessor',
@@ -30,13 +30,22 @@ config = {
                 ],
             },
             {
+                'processor': 'JpTransProcessor',
+                'trans_framework': 'Ollama',
+                'trans_model': r'hf-mirror.com/SakuraLLM/Sakura-7B-Qwen2.5-v1.0-GGUF',
+                'retry': 3,
+                'trans_stop': {'いる', 'ない', 'する', 'こと', 'この', 'その', 'あの', 'とき', '中', '来', 'いい'},
+            },
+            {
                 'processor': 'JpFuriganaProcessor',
+            },
+            {
+                'processor': 'JpKWTransApplyProcessor',
             },
             {
                 'processor': 'SubSink',
                 'root': r'output/ats_jp_debug',
                 'file_retype': 'ass',
-                'coordinate': 'original',
             },
         ],
     },

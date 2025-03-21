@@ -2,3 +2,5 @@ pysubs2
 tqdm
 requests
 janome
+ollama
+translators

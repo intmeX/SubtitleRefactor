@@ -1,4 +1,3 @@
-import pysubs2
 import time
 import requests
 import subprocess
@@ -19,10 +18,9 @@ def register_processor(cls):
 class Processor:
     def __init__(
             self,
-            coordinate='original',
             **kwargs,
     ):
-        self.coordinate = coordinate
+        pass
 
     def __call__(self, subtitles: Subtitle) -> Subtitle:
         print('{} starting...'.format(self.__class__.__name__))
@@ -121,27 +119,6 @@ class JpFuriganaProcessor(Processor):
         JpFuriganaProcessor.process_count -= 1
         if not JpFuriganaProcessor.process_count:
             JpFuriganaProcessor.close_furigana()
-
-
-@register_processor
-class TextCleaningProcessor(Processor):
-    def __init__(
-            self,
-            strip_charset: str,
-            replace_charset: List,
-            **kwargs
-    ):
-        self.strip_charset = strip_charset
-        self.replace_charset = replace_charset
-        super(TextCleaningProcessor, self).__init__(**kwargs)
-
-    def process(self, subtitles: Subtitle) -> Subtitle:
-        for multisub in tqdm(subtitles.data, desc='Subtitle files', position=0):
-            for sub in tqdm(multisub, desc="Sentences", leave=False, position=0):
-                sub.plaintext = sub.plaintext.strip(self.strip_charset)
-                for src_str, des_str in self.replace_charset:
-                    sub.plaintext = sub.plaintext.replace(src_str, des_str)
-        return subtitles
 
 
 class Compose:
