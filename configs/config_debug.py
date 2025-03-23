@@ -40,7 +40,10 @@ config = {
                 'processor': 'JpFuriganaProcessor',
             },
             {
-                'processor': 'JpKWTransApplyProcessor',
+                'processor': 'KWTransApplyProcessor',
+                'fontname': 'UD Digi Kyokasho N-B',
+                'sentence_size': 20,
+                'keyword_size': 12,
             },
             {
                 'processor': 'SubSink',

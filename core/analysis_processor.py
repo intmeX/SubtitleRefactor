@@ -174,11 +174,14 @@ class JpTransProcessor(Processor):
                     raw_trans.extend([''] * (token_num - result_num))
                     print('Unexpected output in {}\nresults: {}, use public api for translation'.format(exception_pos, raw_trans))
                     for token_idx in range(result_num, token_num):
-                        raw_trans[token_idx] = ts.translate_text(base_form_check[token_idx], from_language='ja', to_language='zh')
+                        try:
+                            raw_trans[token_idx] = ts.translate_text(base_form_check[token_idx], from_language='ja', to_language='zh')
+                        except Exception as e:
+                            print('translator exception in {}'.format(exception_pos))
                 elif result_num > token_num:
                     print('Over output num in {}\noutput: {}'.format(exception_pos, raw_trans))
                 sentence_trans = [[base_form_check[i], raw_trans[i]] for i in range(len(base_form_check))]
-                print(sentence_trans)
+                # print(sentence_trans)
                 file_trans.append(sentence_trans)
             trans.append(file_trans)
             total_sentence += len(file_trans)

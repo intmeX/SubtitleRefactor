@@ -7,12 +7,18 @@ from core.processor import Processor, register_processor
 
 
 @register_processor
-class JpKWTransApplyProcessor(Processor):
+class KWTransApplyProcessor(Processor):
     def __init__(
             self,
-            **kwargs
+            fontname: str = 'UD Digi Kyokasho N-B',
+            sentence_size: int = 20,
+            keyword_size: int = 12,
+            **kwargs,
     ):
-        super(JpKWTransApplyProcessor, self).__init__(**kwargs)
+        self.fontname = fontname
+        self.sentence_size = sentence_size
+        self.keyword_size = keyword_size
+        super(KWTransApplyProcessor, self).__init__(**kwargs)
 
     def process(self, subtitles: Subtitle) -> Subtitle:
         if not subtitles.trans_words:
@@ -20,16 +26,97 @@ class JpKWTransApplyProcessor(Processor):
         for file_idx in tqdm(range(len(subtitles.files)), desc='Subtitle files', position=0):
             multi_trans_words, multisub = subtitles.trans_words[file_idx], subtitles.data[file_idx]
             multisub.styles.update({
-                "bottom": SSAStyle(fontname='UD Digi Kyokasho N-B', fontsize=20, alignment=Alignment.BOTTOM_CENTER, primarycolor=Color(240, 156, 240)),
-                "left": SSAStyle(fontname='UD Digi Kyokasho N-B', fontsize=18, alignment=Alignment.MIDDLE_LEFT, primarycolor=Color(64, 148, 230, 128)),
+                'sentence_bottom': SSAStyle(
+                    fontname=self.fontname,
+                    fontsize=self.sentence_size,
+                    alignment=Alignment.BOTTOM_CENTER,
+                    primarycolor=Color(240, 156, 240),
+                    outlinecolor=Color(0, 0, 0, 64),
+                    backcolor=Color(0, 0, 0, 255),
+                ),
+                'keywords_left': SSAStyle(
+                    fontname=self.fontname,
+                    fontsize=self.keyword_size,
+                    alignment=Alignment.MIDDLE_LEFT,
+                    primarycolor=Color(64, 148, 230, 224),
+                    outlinecolor=Color(0, 0, 0, 64),
+                    backcolor=Color(0, 0, 0, 255),
+            ),
             })
             for sentence_idx in tqdm(range(len(multisub)), desc="Sentences", leave=False, position=0):
                 trans_key_words, sub = multi_trans_words[sentence_idx], multisub[sentence_idx]
-                sub.style = 'bottom'
+                sub.style = 'sentence_bottom'
                 anno_sub = deepcopy(sub)
                 anno_sub.plaintext = '\n'.join([':'.join(key_trans) for key_trans in trans_key_words])
-                anno_sub.style = 'left'
+                anno_sub.style = 'keywords_left'
                 multisub.append(anno_sub)
+        return subtitles
+
+
+@register_processor
+class KWStyleProcessor(Processor):
+    def __init__(
+            self,
+            fontname: str = 'UD Digi Kyokasho N-B',
+            sentence_size: int = 20,
+            keyword_size: int = 12,
+            trans_chs_size: int = 8,
+            outline_size: float = 1.0,
+            sentence_offset_ms: int = 0,
+            keyword_offset_ms: int = 0,
+            trans_chs_offset_ms: int = 0,
+            **kwargs,
+    ):
+        self.fontname = fontname
+        self.sentence_size = sentence_size
+        self.keyword_size = keyword_size
+        self.trans_chs_size = trans_chs_size
+        self.outline_size = outline_size
+        self.offset_ms = {
+            'sentence_bottom': sentence_offset_ms,
+            'keywords_left': keyword_offset_ms,
+            'chs_top_right': trans_chs_offset_ms,
+        }
+        super(KWStyleProcessor, self).__init__(**kwargs)
+
+    def process(self, subtitles: Subtitle) -> Subtitle:
+        for file_idx in tqdm(range(len(subtitles.files)), desc='Subtitle files', position=0):
+            multisub = subtitles.data[file_idx]
+            multisub.styles.update({
+                'sentence_bottom': SSAStyle(
+                    fontname=self.fontname,
+                    fontsize=self.sentence_size,
+                    alignment=Alignment.BOTTOM_CENTER,
+                    primarycolor=Color(240, 156, 240),
+                    outlinecolor=Color(0, 0, 0, 64),
+                    backcolor=Color(0, 0, 0, 255),
+                    outline=self.outline_size,
+                ),
+                'keywords_left': SSAStyle(
+                    fontname=self.fontname,
+                    fontsize=self.keyword_size,
+                    alignment=Alignment.MIDDLE_LEFT,
+                    primarycolor=Color(64, 148, 230, 224),
+                    outlinecolor=Color(0, 0, 0, 64),
+                    backcolor=Color(0, 0, 0, 255),
+                    outline=self.outline_size,
+                ),
+                'chs_top_right': SSAStyle(
+                    fontname=self.fontname,
+                    fontsize=self.trans_chs_size,
+                    alignment=Alignment.TOP_RIGHT,
+                    primarycolor=Color(64, 148, 230, 224),
+                    outlinecolor=Color(0, 0, 0, 224),
+                    backcolor=Color(0, 0, 0, 255),
+                    outline=self.outline_size,
+                ),
+            })
+            for sub in tqdm(multisub, desc="Sentences", leave=False, position=0):
+                if sub.style not in self.offset_ms:
+                    raise KeyError('Undefined style in subtitles')
+                offset_ms = self.offset_ms[sub.style]
+                sub.start += offset_ms
+                sub.end += offset_ms
         return subtitles
 
 
