@@ -121,6 +121,60 @@ class KWStyleProcessor(Processor):
 
 
 @register_processor
+class Ruby2KrokProcessor(Processor):
+    def __init__(
+            self,
+            convert_part: List,
+            **kwargs
+    ):
+        self.convert_part = convert_part
+        self.sep = r'{\k1}'
+        self.replace_pair = [[r'<ruby>', self.sep], [r'</ruby>', self.sep], [r'<rp>(</rp>', r'|'], [r'<rp>)</rp>', r''], [r'<rt>', ''], [r'</rt>', '']]
+        super(Ruby2KrokProcessor, self).__init__(**kwargs)
+
+    def process(self, subtitles: Subtitle) -> Subtitle:
+        for multisub in tqdm(subtitles.data, desc='Subtitle files', position=0):
+            for sub in tqdm(multisub, desc="Sentences", leave=False, position=0):
+                if sub.style not in self.convert_part:
+                    continue
+                for src_str, des_str in self.replace_pair:
+                    tmp_str = sub.text
+                    tmp_str = tmp_str.replace(src_str, des_str)
+                    sub.text = tmp_str
+                if not sub.text.startswith(self.sep):
+                    sub.text = self.sep + sub.text
+        return subtitles
+
+
+@register_processor
+class Ruby2BaseProcessor(Processor):
+    def __init__(
+            self,
+            convert_part: List,
+            **kwargs
+    ):
+        self.convert_part = convert_part
+        self.replace_pair = [
+            [r'<ruby>', r'<ruby-container><ruby-base>'],
+            [r'</ruby>', r'</ruby-container>'],
+            [r'<rp>(</rp>', r'</ruby-base>'],
+            [r'<rp>)</rp>', ''],
+            [r'<rt>', r'<ruby-text>'],
+            [r'</rt>', r'</ruby-text>'],
+        ]
+        super(Ruby2BaseProcessor, self).__init__(**kwargs)
+
+    def process(self, subtitles: Subtitle) -> Subtitle:
+        for multisub in tqdm(subtitles.data, desc='Subtitle files', position=0):
+            for sub in tqdm(multisub, desc="Sentences", leave=False, position=0):
+                if sub.style not in self.convert_part:
+                    continue
+                for src_str, des_str in self.replace_pair:
+                    sub.text = sub.text.replace(src_str, des_str)
+        return subtitles
+
+
+@register_processor
 class TextCleaningProcessor(Processor):
     def __init__(
             self,

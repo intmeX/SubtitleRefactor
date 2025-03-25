@@ -15,7 +15,7 @@ def get_config():
     print('Successfully load config file')
     # use command line args cover the config dict
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', type=str, default='debug', choices=['default', 'debug'])
+    parser.add_argument('--mode', type=str, default='default', choices=['default', 'debug'])
     args, _ = parser.parse_known_args()
     args = vars(args)
     for key, value in args.items():
