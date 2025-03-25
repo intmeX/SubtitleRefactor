@@ -31,7 +31,7 @@ def get_config():
 def main():
     cfg = get_config()
     subtitles = Subtitle(**cfg)
-    processing_cfg = cfg.get('processing', dict)
+    processing_cfg = cfg.get('processing', dict())
     processors = processing_cfg.pop('processors', [])
     solutions = Compose([get_processor(processing_cfg, processor_cfg) for processor_cfg in processors])
     results = solutions(subtitles)
