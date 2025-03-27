@@ -173,6 +173,7 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+input/
 output/
 node_modules/
 package-lock.json

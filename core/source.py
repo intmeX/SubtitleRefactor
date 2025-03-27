@@ -1,5 +1,6 @@
 import os
 import pysubs2
+from typing import List
 from core.processor import Processor, register_processor
 from core.processor import Subtitle
 
@@ -9,11 +10,20 @@ class SubSource(Processor):
     def __init__(
             self,
             root: str,
-            file_type: str,
+            file_type: str = 'ass|srt',
+            jp_styles: List = None,
+            chs_styles: List = None,
             **kwargs,
     ):
         self.root = root
         self.file_types = file_type.split('|')
+        self.styles = dict()
+        if jp_styles:
+            for style in jp_styles:
+                self.styles[style] = 'jp_sentence_bottom'
+        if chs_styles:
+            for style in chs_styles:
+                self.styles[style] = 'chs_top_right'
         super(SubSource, self).__init__(**kwargs)
 
     def process(self, subtitles: Subtitle) -> Subtitle:
@@ -22,7 +32,11 @@ class SubSource(Processor):
         for file in os.listdir(self.root):
             if not any([file.endswith(suffix) for suffix in self.file_types]):
                 continue
-            sub_objs.append(pysubs2.load(os.path.join(self.root, file), encoding='utf-8'))
+            event_file = pysubs2.load(os.path.join(self.root, file), encoding='utf-8')
+            for event in event_file:
+                if event.style in self.styles:
+                    event.style = self.styles[event.style]
+            sub_objs.append(event_file)
             file = file[: file.rfind('.')]
             files.append(file)
         subtitles.files = files
@@ -31,16 +45,25 @@ class SubSource(Processor):
 
 
 @register_processor
-class ChsMergeSource(Processor):
+class MergeSource(Processor):
     def __init__(
             self,
             root: str,
-            file_type: str,
+            file_type: str = 'ass|srt',
+            pick_jp_styles: List = None,
+            pick_chs_styles: List = None,
             **kwargs,
     ):
         self.root = root
         self.file_types = file_type.split('|')
-        super(ChsMergeSource, self).__init__(**kwargs)
+        self.pick_styles = dict()
+        if pick_jp_styles:
+            for style in pick_jp_styles:
+                self.pick_styles[style] = 'jp_sentence_bottom'
+        if pick_chs_styles:
+            for style in pick_chs_styles:
+                self.pick_styles[style] = 'chs_top_right'
+        super(MergeSource, self).__init__(**kwargs)
 
     def process(self, subtitles: Subtitle) -> Subtitle:
         file_names = []
@@ -56,7 +79,9 @@ class ChsMergeSource(Processor):
             origin_file = subtitles.data[idx]
             event_file = pysubs2.load(os.path.join(self.root, file), encoding='utf-8')
             for event in event_file:
-                event.style = 'chs_top_right'
+                if event.style not in self.pick_styles:
+                    continue
+                event.style = self.pick_styles[event.style]
                 origin_file.append(event)
         return subtitles
 

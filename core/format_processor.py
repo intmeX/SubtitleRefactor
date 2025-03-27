@@ -10,14 +10,8 @@ from core.processor import Processor, register_processor
 class KWTransApplyProcessor(Processor):
     def __init__(
             self,
-            fontname: str = 'UD Digi Kyokasho N-B',
-            sentence_size: int = 20,
-            keyword_size: int = 12,
             **kwargs,
     ):
-        self.fontname = fontname
-        self.sentence_size = sentence_size
-        self.keyword_size = keyword_size
         super(KWTransApplyProcessor, self).__init__(**kwargs)
 
     def process(self, subtitles: Subtitle) -> Subtitle:
@@ -25,30 +19,13 @@ class KWTransApplyProcessor(Processor):
             raise ValueError('No translated keyword found in Subtitles')
         for file_idx in tqdm(range(len(subtitles.files)), desc='Subtitle files', position=0):
             multi_trans_words, multisub = subtitles.trans_words[file_idx], subtitles.data[file_idx]
-            multisub.styles.update({
-                'sentence_bottom': SSAStyle(
-                    fontname=self.fontname,
-                    fontsize=self.sentence_size,
-                    alignment=Alignment.BOTTOM_CENTER,
-                    primarycolor=Color(240, 156, 240),
-                    outlinecolor=Color(0, 0, 0, 64),
-                    backcolor=Color(0, 0, 0, 255),
-                ),
-                'keywords_left': SSAStyle(
-                    fontname=self.fontname,
-                    fontsize=self.keyword_size,
-                    alignment=Alignment.MIDDLE_LEFT,
-                    primarycolor=Color(64, 148, 230, 224),
-                    outlinecolor=Color(0, 0, 0, 64),
-                    backcolor=Color(0, 0, 0, 255),
-            ),
-            })
             for sentence_idx in tqdm(range(len(multisub)), desc="Sentences", leave=False, position=0):
                 trans_key_words, sub = multi_trans_words[sentence_idx], multisub[sentence_idx]
-                sub.style = 'sentence_bottom'
+                if not trans_key_words:
+                    continue
                 anno_sub = deepcopy(sub)
                 anno_sub.plaintext = '\n'.join([':'.join(key_trans) for key_trans in trans_key_words])
-                anno_sub.style = 'keywords_left'
+                anno_sub.style = 'jp_keywords_left'
                 multisub.append(anno_sub)
         return subtitles
 
@@ -73,8 +50,8 @@ class KWStyleProcessor(Processor):
         self.trans_chs_size = trans_chs_size
         self.outline_size = outline_size
         self.offset_ms = {
-            'sentence_bottom': sentence_offset_ms,
-            'keywords_left': keyword_offset_ms,
+            'jp_sentence_bottom': sentence_offset_ms,
+            'jp_keywords_left': keyword_offset_ms,
             'chs_top_right': trans_chs_offset_ms,
         }
         super(KWStyleProcessor, self).__init__(**kwargs)
@@ -83,7 +60,7 @@ class KWStyleProcessor(Processor):
         for file_idx in tqdm(range(len(subtitles.files)), desc='Subtitle files', position=0):
             multisub = subtitles.data[file_idx]
             multisub.styles.update({
-                'sentence_bottom': SSAStyle(
+                'jp_sentence_bottom': SSAStyle(
                     fontname=self.fontname,
                     fontsize=self.sentence_size,
                     alignment=Alignment.BOTTOM_CENTER,
@@ -92,7 +69,7 @@ class KWStyleProcessor(Processor):
                     backcolor=Color(0, 0, 0, 255),
                     outline=self.outline_size,
                 ),
-                'keywords_left': SSAStyle(
+                'jp_keywords_left': SSAStyle(
                     fontname=self.fontname,
                     fontsize=self.keyword_size,
                     alignment=Alignment.MIDDLE_LEFT,
@@ -113,7 +90,8 @@ class KWStyleProcessor(Processor):
             })
             for sub in tqdm(multisub, desc="Sentences", leave=False, position=0):
                 if sub.style not in self.offset_ms:
-                    raise KeyError('Undefined style in subtitles')
+                    continue
+                    # raise KeyError('Undefined style in subtitles')
                 offset_ms = self.offset_ms[sub.style]
                 sub.start += offset_ms
                 sub.end += offset_ms
@@ -184,11 +162,14 @@ class TextCleaningProcessor(Processor):
     ):
         self.strip_charset = strip_charset
         self.replace_charset = replace_charset
+        self.apply_styles = ['jp_sentence_bottom']
         super(TextCleaningProcessor, self).__init__(**kwargs)
 
     def process(self, subtitles: Subtitle) -> Subtitle:
         for multisub in tqdm(subtitles.data, desc='Subtitle files', position=0):
             for sub in tqdm(multisub, desc="Sentences", leave=False, position=0):
+                if sub.style not in self.apply_styles:
+                    continue
                 sub.plaintext = sub.plaintext.strip(self.strip_charset)
                 for src_str, des_str in self.replace_charset:
                     sub.plaintext = sub.plaintext.replace(src_str, des_str)

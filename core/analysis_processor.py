@@ -33,6 +33,7 @@ class JpMarkProcessor(Processor):
         ]
         self.analyzer = Analyzer(tokenizer=self.tokenizer, token_filters=self.token_filters)
         self.plain_analyzer = Analyzer(tokenizer=self.tokenizer, token_filters=self.plain_token_filters)
+        self.apply_styles = ['jp_sentence_bottom']
         super(JpMarkProcessor, self).__init__(**kwargs)
 
     def process(self, subtitles: Subtitle) -> Subtitle:
@@ -42,6 +43,9 @@ class JpMarkProcessor(Processor):
         for multisub in tqdm(subtitles.data, desc='Subtitle files', position=0):
             file_mark = []
             for sub in tqdm(multisub, desc="Sentences", leave=False, position=0):
+                if sub.style not in self.apply_styles:
+                    file_mark.append([])
+                    continue
                 sentence_mark = []
                 for token in self.analyzer.analyze(sub.plaintext):
                     if token.extra and any([stop_str in token.extra[0] for stop_str in self.stop_filter]):
@@ -88,6 +92,7 @@ class JpTransProcessor(Processor):
         self.trans_model = trans_model
         self.retry = retry
         self.trans_stop = trans_stop
+        self.apply_styles = ['jp_sentence_bottom']
         super(JpTransProcessor, self).__init__(**kwargs)
 
     def context_translate(self, sentence, key_words_surface):
@@ -142,6 +147,9 @@ class JpTransProcessor(Processor):
             file_trans = []
             for sentence_idx in tqdm(range(len(multisub)), desc="Sentences", leave=False, position=0):
                 key_words, sub = multi_key_words[sentence_idx], multisub[sentence_idx]
+                if sub.style not in self.apply_styles:
+                    file_trans.append([])
+                    continue
                 exception_pos = 'file {} sentence "{}"'.format(subtitles.files[file_idx], sub.plaintext)
                 base_form_unique = set()
                 base_form_check = []

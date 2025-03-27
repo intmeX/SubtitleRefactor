@@ -96,12 +96,15 @@ class JpFuriganaProcessor(Processor):
         if not JpFuriganaProcessor.process_count:
             JpFuriganaProcessor.init_furigana(**kwargs)
         JpFuriganaProcessor.process_count += 1
+        self.apply_styles = ['jp_sentence_bottom']
         super(JpFuriganaProcessor, self).__init__(**kwargs)
 
     def process(self, subtitles: Subtitle) -> Subtitle:
         for i in tqdm(range(len(subtitles.data)), desc='Subtitle files', position=0):
             multisub = subtitles.data[i]
             for sub in tqdm(multisub, desc="Sentences", leave=False, position=0):
+                if sub.style not in self.apply_styles:
+                    continue
                 try:
                     furigana = JpFuriganaProcessor.get_furigana(sub.plaintext, 'furigana', 'hiragana')
                     sub.plaintext = furigana

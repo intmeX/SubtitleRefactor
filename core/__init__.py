@@ -1,5 +1,5 @@
 from core.sub import Subtitle
-from core.source import SubSource, ChsMergeSource
+from core.source import SubSource, MergeSource
 from core.sink import SubSink
 from core.processor import register_processor, PROCESSOR, Compose
 from core.processor import Processor, JpFuriganaProcessor
@@ -22,7 +22,7 @@ __all__ = [
     'JpMarkProcessor',
     'KWTransApplyProcessor',
     'KWStyleProcessor',
-    'ChsMergeSource',
+    'MergeSource',
     'Ruby2KrokProcessor',
     'Ruby2BaseProcessor',
 ]
