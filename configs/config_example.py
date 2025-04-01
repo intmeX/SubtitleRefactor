@@ -40,6 +40,8 @@ config = {
             },
             {
                 'processor': 'JpFuriganaProcessor',
+                'mode_str': 'furigana',
+                'to_str': 'hiragana',
             },
             {
                 'processor': 'KWTransApplyProcessor',

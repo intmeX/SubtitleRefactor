@@ -5,7 +5,7 @@ from core.processor import register_processor, PROCESSOR, Compose
 from core.processor import Processor, JpFuriganaProcessor
 from core.analysis_processor import JpTransProcessor, JpMarkProcessor
 from core.format_processor import TextCleaningProcessor, KWTransApplyProcessor, KWStyleProcessor, Ruby2KrokProcessor, \
-                                  Ruby2BaseProcessor
+                                  Ruby2BaseProcessor, Ruby2TextProcessor
 
 
 __all__ = [
@@ -25,6 +25,7 @@ __all__ = [
     'MergeSource',
     'Ruby2KrokProcessor',
     'Ruby2BaseProcessor',
+    'Ruby2TextProcessor',
 ]
 
 

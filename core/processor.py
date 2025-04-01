@@ -92,10 +92,17 @@ class JpFuriganaProcessor(Processor):
             raise e
         return furigana
 
-    def __init__(self, **kwargs):
+    def __init__(
+            self,
+            mode_str: str = 'furigana',
+            to_str: str = 'hiragana',
+            **kwargs,
+    ):
         if not JpFuriganaProcessor.process_count:
             JpFuriganaProcessor.init_furigana(**kwargs)
         JpFuriganaProcessor.process_count += 1
+        self.mode_str = mode_str
+        self.to_str = to_str
         self.apply_styles = ['jp_sentence_bottom']
         super(JpFuriganaProcessor, self).__init__(**kwargs)
 
@@ -106,7 +113,7 @@ class JpFuriganaProcessor(Processor):
                 if sub.style not in self.apply_styles:
                     continue
                 try:
-                    furigana = JpFuriganaProcessor.get_furigana(sub.plaintext, 'furigana', 'hiragana')
+                    furigana = JpFuriganaProcessor.get_furigana(sub.plaintext, self.mode_str, self.to_str)
                     sub.plaintext = furigana
                 except Exception as e:
                     print('Error in furigana for file: {}  line: {}  sentence: {}'.format(
